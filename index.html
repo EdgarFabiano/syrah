@@ -1441,10 +1441,6 @@
                 grid-template-columns: 1fr;
             }
 
-            .insurance-grid .insurance-item:nth-child(n+6) {
-                display: none !important;
-            }
-
             .insurance-grid.filtering .insurance-item {
                 display: block !important;
             }
@@ -1855,41 +1851,10 @@
             </div>
             <div class="insurance-filter fade-in">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <input type="text" id="insuranceSearch" placeholder="Buscar convênio..." oninput="filterInsurance()">
+                <input type="text" id="insuranceSearch" placeholder="Buscar convênio...">
             </div>
-            <div class="insurance-grid fade-in">
-                <div class="insurance-item" data-search="AFEB BRASAL">AFEB BRASAL</div>
-                <div class="insurance-item" data-search="AFFEGO">AFFEGO</div>
-                <div class="insurance-item" data-search="ANAFE SAÚDE">ANAFE SAÚDE</div>
-                <div class="insurance-item" data-search="BRB SAÚDE BRB">BRB (SAÚDE BRB)</div>
-                <div class="insurance-item" data-search="CARE PLUS">CARE PLUS</div>
-                <div class="insurance-item" data-search="CASEC CODEVASF">CASEC (CODEVASF)</div>
-                <div class="insurance-item" data-search="CASEMBRAPA EMBRAPA">CASEMBRAPA (EMBRAPA)</div>
-                <div class="insurance-item" data-search="CONAB">CONAB</div>
-                <div class="insurance-item" data-search="EMBRATEL TELOS">EMBRATEL (TELOS)</div>
-                <div class="insurance-item" data-search="FASCAL">FASCAL</div>
-                <div class="insurance-item" data-search="GDF SAÚDE">GDF SAÚDE</div>
-                <div class="insurance-item" data-search="LIFE EMPRESARIAL">LIFE EMPRESARIAL</div>
-                <div class="insurance-item" data-search="OMINT SAÚDE">OMINT SAÚDE</div>
-                <div class="insurance-item" data-search="PF SAÚDE POLÍCIA FEDERAL">PF SAÚDE (POLÍCIA FEDERAL)</div>
-                <div class="insurance-item" data-search="PLAN ASSISTE MPU">PLAN ASSISTE (MPU)</div>
-                <div class="insurance-item" data-search="PLAS JMU STM">PLAS/JMU (STM)</div>
-                <div class="insurance-item" data-search="PMDF POLÍCIA MILITAR">PMDF</div>
-                <div class="insurance-item" data-search="POSTAL SAÚDE ECT">POSTAL SAÚDE (ECT)</div>
-                <div class="insurance-item" data-search="PROASA">PROASA</div>
-                <div class="insurance-item" data-search="PRÓ-SAÚDE CÂMARA">PRÓ-SAÚDE (CÂMARA)</div>
-                <div class="insurance-item" data-search="PRÓ-SAÚDE TJDFT">PRÓ-SAÚDE (TJDFT)</div>
-                <div class="insurance-item" data-search="PRO-SOCIAL TRF">PRO-SOCIAL (TRF)</div>
-                <div class="insurance-item" data-search="REAL GRANDEZA">REAL GRANDEZA</div>
-                <div class="insurance-item" data-search="SAÚDE CAIXA">SAÚDE CAIXA</div>
-                <div class="insurance-item" data-search="SERPRO">SERPRO</div>
-                <div class="insurance-item" data-search="STF MED STF">STF-MED</div>
-                <div class="insurance-item" data-search="TRE SAÚDE">TRE SAÚDE</div>
-                <div class="insurance-item" data-search="TRT SAÚDE">TRT SAÚDE</div>
-                <div class="insurance-item" data-search="TST SAÚDE">TST SAÚDE</div>
-                <div class="insurance-item" data-search="UNAFISCO SINDIFISCO">UNAFISCO</div>
-            </div>
-            <p class="insurance-ellipsis">+ 25 outros convênios</p>
+            <div class="insurance-grid fade-in" id="insuranceGrid"></div>
+            <p class="insurance-ellipsis" id="insuranceEllipsis"></p>
             <div class="insurance-show-more">
                 <button onclick="toggleInsurance()" id="insuranceShowMore">
                     <span>Ver mais</span>
@@ -2133,95 +2098,141 @@
             lastScroll = currentScroll;
         });
 
-        // Insurance Filter
-        function filterInsurance() {
-            const input = document.getElementById('insuranceSearch');
-            const filter = input.value.toLowerCase();
-            const items = document.querySelectorAll('.insurance-item');
-            const grid = document.querySelector('.insurance-grid');
+        // Convênios Aceitos - Data and Rendering
+        const convenios = [
+            { display: "AFEB BRASAL", search: "AFEB BRASAL" },
+            { display: "AFFEGO", search: "AFFEGO" },
+            { display: "ANAFE SAÚDE", search: "ANAFE SAÚDE" },
+            { display: "BRB (SAÚDE BRB)", search: "BRB SAÚDE BRB" },
+            { display: "CARE PLUS", search: "CARE PLUS" },
+            { display: "CASEC (CODEVASF)", search: "CASEC CODEVASF" },
+            { display: "CASEMBRAPA (EMBRAPA)", search: "CASEMBRAPA EMBRAPA" },
+            { display: "CONAB", search: "CONAB" },
+            { display: "EMBRATEL (TELOS)", search: "EMBRATEL TELOS" },
+            { display: "FASCAL", search: "FASCAL" },
+            { display: "GDF SAÚDE", search: "GDF SAÚDE" },
+            { display: "LIFE EMPRESARIAL", search: "LIFE EMPRESARIAL" },
+            { display: "OMINT SAÚDE", search: "OMINT SAÚDE" },
+            { display: "PF SAÚDE (POLÍCIA FEDERAL)", search: "PF SAÚDE POLÍCIA FEDERAL" },
+            { display: "PLAN ASSISTE (MPU)", search: "PLAN ASSISTE MPU" },
+            { display: "PLAS/JMU (STM)", search: "PLAS JMU STM" },
+            { display: "PMDF", search: "PMDF POLÍCIA MILITAR" },
+            { display: "POSTAL SAÚDE (ECT)", search: "POSTAL SAÚDE ECT" },
+            { display: "PROASA", search: "PROASA" },
+            { display: "PRÓ-SAÚDE (CÂMARA)", search: "PRÓ-SAÚDE CÂMARA" },
+            { display: "PRÓ-SAÚDE (TJDFT)", search: "PRÓ-SAÚDE TJDFT" },
+            { display: "PRO-SOCIAL (TRF)", search: "PRO-SOCIAL TRF" },
+            { display: "REAL GRANDEZA", search: "REAL GRANDEZA" },
+            { display: "SAÚDE CAIXA", search: "SAÚDE CAIXA" },
+            { display: "SERPRO", search: "SERPRO" },
+            { display: "STF-MED", search: "STF MED STF" },
+            { display: "TRE SAÚDE", search: "TRE SAÚDE" },
+            { display: "TRT SAÚDE", search: "TRT SAÚDE" },
+            { display: "TST SAÚDE", search: "TST SAÚDE" },
+            { display: "UNAFISCO", search: "UNAFISCO SINDIFISCO" },
+            { display: "ASSEFAZ", search: "ASSEFAZ" },
+            { display: "BATTISTELLA", search: "BATTISTELLA" },
+            { display: "BRADESCO SAÚDE", search: "BRADESCO SAÚDE" },
+            { display: "CAPESESP", search: "CAPESESP" },
+            { display: "CARDIOLÓGICA", search: "CARDIOLÓGICA" },
+            { display: "CONAB", search: "CONAB" },
+            { display: "CRAS DF", search: "CRAS DF" },
+            { display: "FACHESF", search: "FACHESF" },
+            { display: "FAMED", search: "FAMED" },
+            { display: "FUSEX", search: "FUSEX" },
+            { display: "GAMA SAÚDE", search: "GAMA SAÚDE" },
+            { display: "GEAP", search: "GEAP" },
+            { display: "GRAVIA", search: "GRAVIA" },
+            { display: "INFRAPREV", search: "INFRAPREV" },
+            { display: "MEDSENIOR", search: "MEDSENIOR" },
+            { display: "NOTRE DAME", search: "NOTRE DAME" },
+            { display: "OMNI SAÚDE", search: "OMNI SAÚDE" },
+            { display: "PARTICULAR", search: "PARTICULAR" },
+            { display: "PREVENT SENIOR", search: "PREVENT SENIOR" },
+            { display: "SABER", search: "SABER" },
+            { display: "SANTA MARCELINA", search: "SANTA MARCELINA" },
+            { display: "SÃO FRANCISCO", search: "SÃO FRANCISCO" },
+            { display: "SEBRAE SAÚDE", search: "SEBRAE SAÚDE" },
+            { display: "SINAL", search: "SINAL" },
+            { display: "SULAMÉRICA", search: "SULAMÉRICA" },
+            { display: "TEMPO SAÚDE", search: "TEMPO SAÚDE" },
+            { display: "UNIMED", search: "UNIMED" },
+            { display: "VALE S/A", search: "VALE SA" },
+            { display: "VIDA SAÚDE", search: "VIDA SAÚDE" }
+        ];
+
+        let filteredConvenios = [...convenios];
+        let isExpanded = false;
+        const ITEMS_PER_PAGE_MOBILE = 5;
+
+        function renderConvenios() {
+            const grid = document.getElementById('insuranceGrid');
             const isMobile = window.innerWidth < 480;
-            let visibleCount = 0;
+            const searchValue = document.getElementById('insuranceSearch').value;
+            let itemsToShow = filteredConvenios;
             
-            // First, show/hide based on search
-            items.forEach(item => {
-                const searchData = item.getAttribute('data-search').toLowerCase();
-                if (searchData.includes(filter)) {
-                    item.style.display = '';
-                    visibleCount++;
-                } else {
-                    item.style.display = 'none';
-                }
-            });
+            if (isMobile && !isExpanded && !searchValue) {
+                itemsToShow = filteredConvenios.slice(0, ITEMS_PER_PAGE_MOBILE);
+            }
             
-            const ellipsis = document.querySelector('.insurance-ellipsis');
+            grid.innerHTML = itemsToShow.map(c => 
+                `<div class="insurance-item" data-search="${c.search}">${c.display}</div>`
+            ).join('');
+            
+            const ellipsis = document.getElementById('insuranceEllipsis');
             const showMoreBtn = document.getElementById('insuranceShowMore');
             
-            // Add/remove filter class to disable CSS nth-child rule
-            if (filter !== '') {
-                grid.classList.add('filtering');
-            } else {
-                grid.classList.remove('filtering');
-            }
-            
-            // Only apply show more logic on mobile
-            if (isMobile) {
-                if (filter !== '') {
-                    // When filtering, show all matching results
+            if (isMobile && !searchValue) {
+                if (isExpanded) {
                     ellipsis.style.display = 'none';
-                    showMoreBtn.style.display = 'none';
-                } else if (visibleCount > 5 && !grid.classList.contains('show-all')) {
-                    // Not filtering, show first 5 only
+                    showMoreBtn.style.display = 'flex';
+                } else if (filteredConvenios.length > ITEMS_PER_PAGE_MOBILE) {
+                    const remaining = filteredConvenios.length - ITEMS_PER_PAGE_MOBILE;
+                    ellipsis.textContent = `+ ${remaining} outros convênios`;
                     ellipsis.style.display = 'block';
                     showMoreBtn.style.display = 'flex';
-                    items.forEach((item, index) => {
-                        if (index >= 5) item.style.display = 'none';
-                    });
-                } else if (grid.classList.contains('show-all')) {
-                    ellipsis.style.display = 'none';
-                    showMoreBtn.style.display = 'none';
-                    items.forEach(item => {
-                        item.style.display = '';
-                    });
                 } else {
                     ellipsis.style.display = 'none';
                     showMoreBtn.style.display = 'none';
                 }
             } else {
-                // Desktop: always show all
                 ellipsis.style.display = 'none';
-                showMoreBtn.style.display = 'none';
+                showMoreBtn.style.display = searchValue ? 'flex' : 'none';
             }
+        }
+
+        function filterConvenios() {
+            const searchTerm = document.getElementById('insuranceSearch').value.toLowerCase();
+            filteredConvenios = searchTerm 
+                ? convenios.filter(c => c.search.toLowerCase().includes(searchTerm))
+                : [...convenios];
+            renderConvenios();
         }
 
         function toggleInsurance() {
-            const grid = document.querySelector('.insurance-grid');
+            isExpanded = !isExpanded;
             const btn = document.getElementById('insuranceShowMore');
-            const ellipsis = document.querySelector('.insurance-ellipsis');
-            const items = document.querySelectorAll('.insurance-item');
+            const span = btn.querySelector('span');
             
-            grid.classList.toggle('show-all');
-            
-            if (grid.classList.contains('show-all')) {
-                btn.querySelector('span').textContent = 'Ver menos';
+            if (isExpanded) {
+                span.textContent = 'Ver menos';
                 btn.classList.add('expanded');
-                ellipsis.style.display = 'none';
-                // Show all items
-                items.forEach(item => {
-                    item.style.display = '';
-                });
             } else {
-                btn.querySelector('span').textContent = 'Ver mais';
+                span.textContent = 'Ver mais';
                 btn.classList.remove('expanded');
-                // Re-apply the limit
-                filterInsurance();
+                document.getElementById('insuranceGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
+            renderConvenios();
         }
 
-        // Initialize on load
-        filterInsurance();
+        // Initialize
+        renderConvenios();
         
-        // Also re-check on resize
-        window.addEventListener('resize', filterInsurance);
+        // Filter on input
+        document.getElementById('insuranceSearch').addEventListener('input', filterConvenios);
+        
+        // Re-render on resize
+        window.addEventListener('resize', renderConvenios);
     </script>
 </body>
 </html>
